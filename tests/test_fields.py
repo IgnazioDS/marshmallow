@@ -151,6 +151,24 @@ class TestField:
         field = fields.String()
         assert field.get_value({"name": "monty"}, "name") == "monty"
 
+    def test_dump_getter_as_function(self):
+        def get_upper(obj, attr, default):
+            return obj[attr].upper()
+
+        class MySchema(Schema):
+            name = fields.String(dump_getter=get_upper)
+
+        assert MySchema().dump({"name": "monty"}) == {"name": "MONTY"}
+
+    def test_dump_getter_as_schema_method(self):
+        class MySchema(Schema):
+            def get_upper(self, obj, attr, default):
+                return obj[attr].upper()
+
+            name = fields.String(dump_getter="get_upper")
+
+        assert MySchema().dump({"name": "monty"}) == {"name": "MONTY"}
+
     def test_load_getter_overrides_default_access(self):
         class MySchema(Schema):
             name = fields.String(
@@ -198,6 +216,24 @@ class TestField:
 
         result = MySchema().load({"name": "monty"})
         assert result == {"name": "monty"}
+
+    def test_load_getter_as_function(self):
+        def get_upper(data, key, default):
+            return data[key].upper()
+
+        class MySchema(Schema):
+            name = fields.String(load_getter=get_upper)
+
+        assert MySchema().load({"name": "monty"}) == {"name": "MONTY"}
+
+    def test_load_getter_as_schema_method(self):
+        class MySchema(Schema):
+            def get_upper(self, data, key, default):
+                return data[key].upper()
+
+            name = fields.String(load_getter="get_upper")
+
+        assert MySchema().load({"name": "monty"}) == {"name": "MONTY"}
 
 
 class TestParentAndName:

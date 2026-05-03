@@ -103,10 +103,10 @@ class _BaseFieldKwargs(typing.TypedDict, total=False):
     error_messages: types.ErrorMessages | None
     metadata: typing.Mapping[str, typing.Any] | None
     dump_getter: (
-        typing.Callable[[typing.Any, str, typing.Any], typing.Any] | None
+        str | typing.Callable[[typing.Any, str, typing.Any], typing.Any] | None
     )
     load_getter: (
-        typing.Callable[[typing.Any, str, typing.Any], typing.Any] | None
+        str | typing.Callable[[typing.Any, str, typing.Any], typing.Any] | None
     )
 
 
@@ -211,10 +211,10 @@ class Field(typing.Generic[_InternalT]):
         error_messages: types.ErrorMessages | None = None,
         metadata: typing.Mapping[str, typing.Any] | None = None,
         dump_getter: (
-            typing.Callable[[typing.Any, str, typing.Any], typing.Any] | None
+            str | typing.Callable[[typing.Any, str, typing.Any], typing.Any] | None
         ) = None,
         load_getter: (
-            typing.Callable[[typing.Any, str, typing.Any], typing.Any] | None
+            str | typing.Callable[[typing.Any, str, typing.Any], typing.Any] | None
         ) = None,
     ) -> None:
         self.dump_default = dump_default
@@ -386,6 +386,14 @@ class Field(typing.Generic[_InternalT]):
         self.root = self.root or (
             self.parent.root if isinstance(self.parent, Field) else self.parent
         )
+        if isinstance(self.dump_getter, str):
+            self.dump_getter = utils.callable_or_raise(
+                getattr(parent, self.dump_getter)
+            )
+        if isinstance(self.load_getter, str):
+            self.load_getter = utils.callable_or_raise(
+                getattr(parent, self.load_getter)
+            )
 
     def _serialize(self, value: _InternalT | None, **kwargs) -> typing.Any:
         """Serializes ``value`` to a basic Python datatype. Noop by default.
